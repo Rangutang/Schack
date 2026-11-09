@@ -384,7 +384,7 @@
       }
       this.groupWaveCount=this.waves.length;
       this.totalMatches=this.waves.flat().length;
-      this.players=players;
+      this.players=players;this.bench=[...players];
       this.comment.reset();
       this.comment.say(`Turnering ${(this.champ.races||0)+1}: ${n} deltagare i ${numGroups} grupper om ${gs}.`,0,true);
       this.state='intro';this.stateTime=0;
@@ -497,8 +497,13 @@
     startMatch(m){
       const white=m.attempts%2===0?m.a:m.b,black=white===m.a?m.b:m.a;
       m.a.played++;m.b.played++;
+      const bi=this.bench.indexOf(white),bj=this.bench.indexOf(black);
+      const bg=this.benchGeom();
+      const fromW=bi>=0?{x:this.benchX(bi),y:bg.y-8}:null,fromB=bj>=0?{x:this.benchX(bj),y:bg.y-8}:null;
+      if(bi>=0)this.bench.splice(bi,1);
+      const bj2=this.bench.indexOf(black);if(bj2>=0)this.bench.splice(bj2,1);
       const st=initialState();
-      const g={id:++this.gameSeq,st,white,black,sans:[],rep:new Map([[repKey(st),1]]),plies:0,moveTimer:0,delay:CONFIG.moveSeconds*rnd(.7,1.2),anim:null,lastFrom:null,lastTo:null,capturedW:[],capturedB:[],over:null,overT:0,match:m,lastMoveAt:0,seatT:0};
+      const g={id:++this.gameSeq,st,white,black,sans:[],rep:new Map([[repKey(st),1]]),plies:0,moveTimer:0,delay:CONFIG.moveSeconds*rnd(.7,1.2),anim:null,lastFrom:null,lastTo:null,capturedW:[],capturedB:[],over:null,overT:0,match:m,lastMoveAt:0,seatT:0,leaving:false,leaveT:0,fromW,fromB,bslot:0};
       this.games.push(g);
       this.comment.say(`${m.attempts>0?`Skiljeparti ${m.attempts}: `:''}${white.name} (vit) mot ${black.name} (svart)${m.phase==='groups'?` – grupp ${m.group.label}`:''}!`,this.clock,true);
     }
@@ -563,6 +568,7 @@
         this.comment.say(`Efter ${m.attempts} oavgjorda partier går ${winner.name} vidare på bättre seedning!`,this.clock,true);
       }
       this.resolveMatch(m,winner,res,g.plies);
+      this.bench.push(m.a,m.b);
     }
 
     resolveMatch(m,winner,res,plies){
@@ -624,7 +630,11 @@
           if(g.anim){g.anim.t+=dt/.16;if(g.anim.t>=1)g.anim=null}
           if(g.seatT<1)g.seatT=Math.min(1,g.seatT+dt/.7);
           if(!g.over){g.moveTimer+=dt;if(g.moveTimer>=g.delay)this.doMove(g)}
-          else{g.overT+=dt;if(g.overT>=CONFIG.gameEndSeconds)this.resolveGame(g)}
+          else{
+            g.overT+=dt;
+            if(g.overT>=CONFIG.gameEndSeconds&&!g.leaving){g.leaving=true;g.leaveT=0;g.bslot=this.bench.length}
+            if(g.leaving){g.leaveT+=dt/.8;if(g.leaveT>=1)this.resolveGame(g)}
+          }
         }
         this.ensureGames();
       }
@@ -674,11 +684,13 @@
         this.drawPiece(c,anim.piece,lerp(x0+(anim.from%8)*s+s/2,x0+(anim.to%8)*s+s/2,t),lerp(y0+Math.floor(anim.from/8)*s+s/2,y0+Math.floor(anim.to/8)*s+s/2,t),s);
       }
       if(g){
-        const seat=g.seatT??1,r=clamp(S*.05,4,20),fs=clamp(S*.06,10,18);
+        const r=clamp(S*.05,4,20),fs=clamp(S*.06,10,18);
         const drawPerson=(p,top)=>{
           const ySeat=top?y0-f-r*.5:y0+S+f+r*.5;
-          const y=lerp(top?y0-S*.9:y0+S*1.9,ySeat,seat);
-          const x=x0+S/2,dir=top?-1:1;
+          const dir=top?-1:1;
+          let x=x0+S/2,y=ySeat;
+          if(g.leaving){const t=clamp(g.leaveT,0,1);x=lerp(x0+S/2,this.benchX((g.bslot||0)+(top?1:0)),t);y=lerp(ySeat,this.benchGeom().y-8,t)}
+          else if(g.seatT<1){const fr=top?g.fromB:g.fromW;const sx=fr&&fr.x!=null?fr.x:x0+S/2,sy=fr?fr.y:(top?y0-S*.9:y0+S*1.9);x=lerp(sx,x0+S/2,g.seatT);y=lerp(sy,ySeat,g.seatT)}
           c.fillStyle=p.color;c.globalAlpha=.9;c.beginPath();c.arc(x,y+dir*r*1.8,r*1.7,0,Math.PI*2);c.fill();c.globalAlpha=1;
           c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
           c.strokeStyle='rgba(0,0,0,.55)';c.lineWidth=Math.max(1,r*.12);c.stroke();
@@ -750,6 +762,31 @@
       if(this.phase==='groups')this.renderGroups();else this.renderBracket();
     }
 
+    benchGeom(){
+      const w=this.w,h=this.h;
+      const x0=w*.22,x1=w*.78,y=h-56;
+      const n=Math.max(1,this.players?this.players.length:1);
+      const slot=Math.min(46,(x1-x0)/n);
+      return{x0,x1,y,slot};
+    }
+    benchX(i){const b=this.benchGeom();return b.x0+i*b.slot+b.slot/2}
+    drawBench(c){
+      const b=this.benchGeom();
+      c.save();c.shadowColor='#000';c.shadowBlur=8;
+      const wg=c.createLinearGradient(0,b.y-8,0,b.y+8);wg.addColorStop(0,'#6e4a26');wg.addColorStop(1,'#3d2812');
+      c.fillStyle=wg;c.beginPath();c.roundRect(b.x0-16,b.y-5,b.x1-b.x0+32,13,6);c.fill();c.restore();
+      c.fillStyle='rgba(255,224,90,.75)';c.font='900 11px system-ui';c.textAlign='left';c.textBaseline='middle';
+      c.fillText('BÄNK',b.x0-16,b.y+16);
+      const list=this.bench||[];
+      for(let i=0;i<list.length;i++){
+        const p=list[i],x=this.benchX(i),y=b.y-5,r=Math.min(7,b.slot*.32);
+        c.fillStyle=p.color;c.globalAlpha=.9;c.beginPath();c.arc(x,y-r*1.7,r*1.6,0,Math.PI*2);c.fill();c.globalAlpha=1;
+        c.beginPath();c.arc(x,y-r*.4,r,0,Math.PI*2);c.fill();
+        c.strokeStyle='rgba(0,0,0,.5)';c.lineWidth=1;c.stroke();
+        if(b.slot>=46){c.fillStyle='rgba(255,255,255,.8)';c.font='9px system-ui';c.textAlign='center';c.fillText(p.name,x,b.y+16)}
+      }
+    }
+
     drawRoom(c){
       const w=this.w,h=this.h,wallH=Math.round(h*.16);
       const wg=c.createLinearGradient(0,0,0,wallH);wg.addColorStop(0,'#263449');wg.addColorStop(1,'#1a2434');
@@ -789,11 +826,12 @@
         this.drawGameBoard(c,null,(this.w-S)/2,(this.h-S)/2+this.h*.04,S);
       }else{
         const cols=Math.ceil(Math.sqrt(k)),rows=Math.ceil(k/cols);
-        const availW=this.w>1050?this.w-640:this.w-30,availH=this.h-120;
-        const gap=Math.max(10,Math.min(availW,availH)*.018);
-        const m=clamp(Math.min(availW/cols,availH/rows)*.07,10,26);
-        let S=Math.min(availW/cols-gap,availH/rows-gap)-2*m;
-        S=Math.max(S,80);
+        const availW=this.w>1050?this.w-640:this.w-30,availH=this.h-130;
+        const gap=Math.max(16,Math.min(availW,availH)*.03);
+        const availCell=Math.min(availW/cols-gap,availH/rows-gap);
+        let S=availCell,m=10;
+        for(let it=0;it<4;it++){m=Math.max(clamp(S*.09,10,30),clamp(S*.05,4,20)*3.8);S=availCell-2*m}
+        S=Math.max(S,70);
         if(k===1){const Sbig=Math.min(this.h*.8,this.w*.58);S=lerp(S,Sbig,this.zoom??0)}
         const cell=S+2*m;
         const gw=cell*cols+(cols-1)*gap,gh=cell*rows+(rows-1)*gap;
@@ -803,6 +841,7 @@
           this.drawGameBoard(c,g,x0+col*(cell+gap),y0+row*(cell+gap),S,m);
         });
       }
+      this.drawBench(c);
       this.drawUI();
     }
 
