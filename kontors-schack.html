@@ -411,13 +411,13 @@
 
     showQualified(adv,firstWave){
       const cards=this.groupResults.map(r=>`<div class="driver"><strong>Grupp ${r.group.label}</strong><br>${r.standings.map((p,i)=>`<div style="display:flex;gap:6px;justify-content:center;align-items:center;padding:1px 0" class="${i<CONFIG.advancePerGroup?'gold':''}"><i style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block"></i> ${esc(p.name)} <b>${p.gPts}p</b>${i<CONFIG.advancePerGroup?' ✔':''}</div>`).join('')}</div>`).join('');
-      const pairs=firstWave.map(m=>{const a=m.src?m.src[0].winner:null,b=m.src?m.src[1].winner:null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('');
+      const pairs=firstWave.map(m=>{const a=m.src?(m.src[0].auto??m.src[0].winner):(m.auto??null),b=m.src?(m.src[1].auto??m.src[1].winner):null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('');
       this.showIntermission('Kvalificerade till slutspelet!',`<div class="grid">${cards}</div><h3 style="color:#ffe168;margin:14px 0 6px">Första slutspelsrundan</h3><div class="grid">${pairs}</div><p>Slutspelet spelas på ett stort bräde, ett parti i taget...</p>`);
     }
 
     showRoundBreak(wave){
       qs('#overlayTitle').textContent=roundName(wave.length)+' börjar';
-      qs('#overlayContent').innerHTML=`<div class="grid">${wave.map(m=>{const a=m.src?m.src[0].winner:null,b=m.src?m.src[1].winner:null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('')}</div><p>Partiet spelas på stort bräde...</p>`;
+      qs('#overlayContent').innerHTML=`<div class="grid">${wave.map(m=>{const a=m.src?(m.src[0].auto??m.src[0].winner):(m.auto??null),b=m.src?(m.src[1].auto??m.src[1].winner):null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('')}</div><p>Partiet spelas på stort bräde...</p>`;
       qs('#centerOverlay').classList.add('show');
     }
 
@@ -428,7 +428,13 @@
       const slots=list.concat(Array.from({length:bs-list.length},(_,i)=>({name:'Walkover',bye:true,color:'#5b6470',seed:list.length+i+1})));
       const order=seedOrder(bs),rounds=[];
       const r0=[];
-      for(let i=0;i<bs;i+=2)r0.push({a:slots[order[i]-1],b:slots[order[i+1]-1],winner:null,done:false,attempts:0,started:false,phase:'playoff'});
+      for(let i=0;i<bs;i+=2){
+        const a=slots[order[i]-1],b=slots[order[i+1]-1];
+        if(a.bye&&b.bye)r0.push({auto:null,done:true});
+        else if(a.bye)r0.push({auto:b,done:true});
+        else if(b.bye)r0.push({auto:a,done:true});
+        else r0.push({a,b,winner:null,done:false,attempts:0,started:false,phase:'playoff'});
+      }
       rounds.push(r0);
       for(let r=1;r<Math.log2(bs);r++){
         const prev=rounds[r-1],cur=[];
@@ -449,7 +455,7 @@
       const adv=this.groupResults.flatMap(r=>r.standings.slice(0,Math.min(CONFIG.advancePerGroup,r.standings.length)).map(p=>({player:p,group:r.group,rank:p.groupRank})));
       const playoff=this.buildPlayoff(adv);
       this.waves=this.waves.concat(playoff);
-      this.totalMatches=this.waves.flat().length;
+      this.totalMatches=this.waves.flat().filter(m=>m.auto===undefined).length;
       this.phase='playoff';
       this.waveIdx=this.groupWaveCount;
       this.state='intermission';this.stateTime=0;
@@ -459,26 +465,32 @@
 
     ensureGames(){
       const maxP=this.phase==='groups'?CONFIG.maxParallel:1;
-      const wave=this.waves[this.waveIdx];
-      if(wave){
-        while(this.games.length<maxP){
-          const m=wave.find(x=>!x.started&&!x.done);
-          if(!m)break;
-          m.started=true;
-          if(m.src){m.a=m.src[0].winner;m.b=m.src[1].winner}
-          if(!m.a||!m.b){m.winner=m.a||m.b;m.done=true;continue}
-          if(m.a.bye&&!m.b.bye){m.winner=m.b;m.done=true;continue}
-          if(m.b.bye&&!m.a.bye){m.winner=m.a;m.done=true;continue}
-          if(m.a.bye&&m.b.bye){m.winner=m.a;m.done=true;continue}
-          this.startMatch(m);
+      while(true){
+        const wave=this.waves[this.waveIdx];
+        if(wave){
+          while(this.games.length<maxP){
+            const m=wave.find(x=>!x.started&&!x.done);
+            if(!m)break;
+            m.started=true;
+            if(m.src){m.a=m.src[0].auto??m.src[0].winner;m.b=m.src[1].auto??m.src[1].winner}
+            if(!m.a||!m.b){m.winner=m.a||m.b;m.done=true;continue}
+            if(m.a.bye&&!m.b.bye){m.winner=m.b;m.done=true;continue}
+            if(m.b.bye&&!m.a.bye){m.winner=m.a;m.done=true;continue}
+            if(m.a.bye&&m.b.bye){m.winner=m.a;m.done=true;continue}
+            this.startMatch(m);
+          }
         }
-      }
-      if(wave&&wave.every(m=>m.done)&&this.games.length===0){
-        if(this.phase==='groups'){this.endGroupStage();return}
-        this.waveIdx++;
-        this.setTag();
-        if(this.waveIdx<this.waves.length){this.state='intermission';this.stateTime=0;this.showRoundBreak(this.waves[this.waveIdx]);return}
-        this.endEvent();
+        if(wave&&wave.every(x=>x.done)&&this.games.length===0){
+          this.waveIdx++;
+          this.setTag();
+          if(this.phase==='groups'){
+            if(this.waveIdx>=this.groupWaveCount){this.endGroupStage();return}
+            continue;
+          }
+          if(this.waveIdx<this.waves.length){this.state='intermission';this.stateTime=0;this.showRoundBreak(this.waves[this.waveIdx]);return}
+          this.endEvent();return;
+        }
+        break;
       }
     }
 
@@ -681,15 +693,17 @@
       const el=qs('#bracket');
       const waves=this.waves.slice(this.groupWaveCount);
       if(!waves.length){el.innerHTML='';return}
-      el.innerHTML=`<h3>Slutspel · parti ${this.waves.flat().filter(m=>m.done).length}/${this.totalMatches}</h3><div class="rounds">`+waves.map((rd,ri)=>{
-        return `<div class="roundCol"><div class="roundTitle">${roundName(rd.length)}</div>`+rd.map(m=>{
+      el.innerHTML=`<h3>Slutspel · parti ${this.waves.flat().filter(m=>m.done&&m.auto===undefined).length}/${this.totalMatches}</h3><div class="rounds">`+waves.map((rd,ri)=>{
+        return `<div class="roundCol"><div class="roundTitle">${roundName(rd.filter(m=>m.auto===undefined).length)}</div>`+rd.map(m=>{
+          if(m.auto!==undefined){const p=m.auto;return `<div class="matchBox">${p?`<div class="mrow win"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}</span><span>vidare</span></div>`:'<div class="mrow"><span>…</span></div>'}</div>`}
           const live=this.phase==='playoff'&&this.waveIdx-this.groupWaveCount===ri&&this.games.some(g=>g.match===m);
+          const da=m.a??(m.src?(m.src[0].auto??m.src[0].winner):null),db=m.b??(m.src?(m.src[1].auto??m.src[1].winner):null);
           const cell=p=>{
             if(!p)return`<div class="mrow"><i class="dot" style="background:#444"></i><span>…</span><span></span></div>`;
             const win=m.done&&m.winner===p,out=m.done&&!win;
-            return `<div class="mrow ${win?'win':out?'out':''}"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}${p.bye?' · W.O.':''}</span><span>${win?'✔':''}</span></div>`;
+            return `<div class="mrow ${win?'win':out?'out':''}"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}</span><span>${win?'✔':''}</span></div>`;
           };
-          return `<div class="matchBox ${live?'live':''}">${cell(m.a)}${cell(m.b)}</div>`;
+          return `<div class="matchBox ${live?'live':''}">${cell(da)}${cell(db)}</div>`;
         }).join('')+`</div>`;
       }).join('')+`</div>`;
     }
@@ -714,9 +728,10 @@
       this.renderChampionship();
       const focus=[...this.games].sort((a,b)=>b.lastMoveAt-a.lastMoveAt)[0]||null;
       this.renderMoves(focus);
-      const done=this.waves.flat().filter(m=>m.done).length;
+      const done=this.waves.flat().filter(m=>m.done&&m.auto===undefined).length;
       if(this.phase==='groups'){
-        qs('#matchInfo').innerHTML=`<b>GRUPPSPEL</b><br>Omgång ${Math.min(this.waveIdx+1,this.groupWaveCount)}/${this.groupWaveCount} · ${this.games.length} partier igång<br>Parti ${done}/${this.totalMatches}`;
+        const wave=this.waves[this.waveIdx],wLen=wave?wave.length:0,wDone=wave?wave.filter(m=>m.done).length:0;
+        qs('#matchInfo').innerHTML=`<b>GRUPPSPEL</b><br>Omgång ${Math.min(this.waveIdx+1,this.groupWaveCount)}/${this.groupWaveCount} · ${wDone}/${wLen} i omgången<br>${this.games.length} partier igång · parti ${done}/${this.totalMatches}`;
       }else{
         const w=this.waves[this.waveIdx],rn=w?roundName(w.length):'SLUTSPEL';
         qs('#matchInfo').innerHTML=`<b>${rn}</b><br>${this.games.length?`${esc(this.games[0].white.name)} ⚪ – ⚫ ${esc(this.games[0].black.name)}<br>`:''}Parti ${done}/${this.totalMatches}`;
