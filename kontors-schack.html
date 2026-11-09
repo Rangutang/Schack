@@ -16,8 +16,10 @@
   #sessionTag.final{background:#f43f5e;color:#fff}
   #matchInfo{top:14px;right:14px;padding:10px 14px;text-align:right;min-width:230px;font-size:14px;line-height:1.5}
   #matchInfo b{font-size:18px;color:var(--accent)}
-  #bracket{top:132px;right:14px;width:min(330px,27vw);padding:10px 12px;max-height:74vh;overflow:hidden}
-  #bracket h3,#championship h3,#moves h3{margin:0 0 6px;color:#ffe168;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+  #groupsPanel,#bracket{top:132px;right:14px;width:min(330px,27vw);padding:10px 12px;max-height:74vh;overflow:hidden}
+  #groupsPanel h3,#bracket h3{margin:0 0 6px;color:#ffe168;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
+  .groupCard{border:1px solid #ffffff14;border-radius:8px;margin-bottom:6px;background:#ffffff08;padding:4px 6px}
+  .groupTitle{font-size:10px;font-weight:900;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;color:#ffe168}
   .rounds{display:flex;gap:8px;align-items:flex-start}
   .roundCol{min-width:0;flex:1}
   .roundTitle{font-size:10px;font-weight:900;opacity:.6;text-transform:uppercase;text-align:center;margin-bottom:4px;letter-spacing:.06em}
@@ -31,6 +33,7 @@
   .champRow{display:grid;grid-template-columns:20px 1fr auto;gap:6px;padding:3px 1px;border-bottom:1px solid #ffffff12}
   .champRow:first-of-type{font-weight:900;color:#ffe168}
   #moves{left:14px;top:calc(96px + 30vh + 12px);width:min(250px,22vw);max-height:20vh;overflow-y:auto;padding:9px 11px;font:12px/1.75 ui-monospace,monospace;scrollbar-width:thin}
+  #moves h3{margin:0 0 4px;color:#ffe168;font-size:12px;text-transform:uppercase;letter-spacing:.1em}
   #commentary{left:14px;bottom:14px;width:min(360px,30vw);max-height:24vh;overflow:hidden;padding:9px 12px;font-size:clamp(11px,1.05vw,14px)}
   #commentary .msg{padding:2px 0;border-bottom:1px solid #ffffff10;opacity:.92}
   #commentary .msg:last-child{color:#ffe168;font-weight:700;border-bottom:0}
@@ -41,7 +44,7 @@
   .card{width:min(1050px,92vw);max-height:90vh;overflow:hidden;background:linear-gradient(145deg,#1a2436f2,#0a1420f5);border:2px solid #ffffff25;border-radius:24px;padding:clamp(18px,3vw,36px);box-shadow:0 25px 80px #000b;text-align:center}
   .card h1{font-size:clamp(38px,7vw,88px);line-height:.9;margin:0 0 5px;color:#ffe05a;text-shadow:0 5px 0 #6b4a00,0 10px 25px #000}
   .card h2{margin:0 0 14px;font-size:clamp(20px,3.2vw,40px)}
-  #overlayContent{overflow:hidden;max-height:72vh}
+  #overlayContent{overflow:hidden;max-height:72vh;overflow-y:auto}
   .resultsGrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,1fr);gap:18px;align-items:start}
   .resultsSection{min-width:0}
   .resultsSection h3{margin:0 0 7px;color:#ffe168;text-align:left}
@@ -56,9 +59,6 @@
   th,td{padding:7px;border-bottom:1px solid #ffffff18;text-align:left}
   th{color:#ffe168;text-transform:uppercase;font-size:.8em}
   .gold{color:#ffe168;font-weight:900}
-  #countdown{position:fixed;inset:0;display:none;place-items:center;z-index:3;font-size:clamp(100px,25vw,330px);font-weight:1000;color:#fff;text-shadow:0 10px 0 #b03a1e,0 18px 48px #000;pointer-events:none}
-  #countdown.show{display:grid;animation:pop .45s ease-out}
-  @keyframes pop{from{transform:scale(.55);opacity:.3}to{transform:scale(1);opacity:1}}
   #pause{position:fixed;inset:0;display:none;place-items:center;background:#0007;z-index:7;font-size:clamp(40px,8vw,100px);font-weight:1000;text-shadow:0 5px 0 #000;pointer-events:none}
   #nameEditor{position:fixed;inset:0;display:none;place-items:center;background:#061019dc;z-index:10}
   #nameEditor.show{display:grid}
@@ -70,21 +70,21 @@
   #nameEditor button{border:0;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer;background:#344b5f;color:#fff}
   #nameEditor button.primary{background:#ffd54a;color:#17202a}
   @media(max-width:1050px){#championship,#moves{display:none}}
-  @media(max-width:850px){#bracket{width:240px;top:150px}#commentary{width:250px}.resultsGrid{grid-template-columns:1fr 1fr;gap:8px}.resultsTable,.champTable{font-size:9px}.grid{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:600px){#bracket,#commentary{display:none}}
+  @media(max-width:850px){#groupsPanel,#bracket{width:240px;top:150px}#commentary{width:250px}.resultsGrid{grid-template-columns:1fr 1fr;gap:8px}.resultsTable,.champTable{font-size:9px}.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){#groupsPanel,#bracket,#commentary{display:none}}
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
-<div id="brand" class="panel">KONTORS-SCHACK<small>AUTONOM SCHACKTURNERING</small><span id="sessionTag">KVARTSFINAL</span></div>
+<div id="brand" class="panel">KONTORS-SCHACK<small>AUTONOM SCHACKTURNERING</small><span id="sessionTag">GRUPPSPEL</span></div>
 <div id="matchInfo" class="panel"></div>
-<div id="bracket" class="panel"></div>
+<div id="groupsPanel" class="panel"></div>
+<div id="bracket" class="panel" style="display:none"></div>
 <div id="championship" class="panel"></div>
 <div id="moves" class="panel"></div>
 <div id="commentary" class="panel"></div>
 <div id="banner" class="panel"></div>
 <div id="status" class="panel"></div>
-<div id="countdown"></div>
 <div id="pause">PAUS</div>
 <div id="nameEditor"><div class="editorCard"><h2>Justera deltagare</h2><p>Ett namn per rad. Ändringen sparas i webbläsaren och används från nästa turnering.</p><textarea id="nameInput" spellcheck="false"></textarea><div class="buttons"><button id="nameCancel">Avbryt</button><button id="nameReset">Standardnamn</button><button id="nameSave" class="primary">Spara och starta ny turnering</button></div></div></div>
 <div id="centerOverlay"><div class="card"><h1>KONTORS-SCHACK</h1><h2 id="overlayTitle"></h2><div id="overlayContent"></div></div></div>
@@ -95,18 +95,20 @@
 
   // ===== ENKEL KONFIGURATION =====
   const CONFIG = {
-    defaultPlayers: `Erik\r\nAlexander\r\nKersti\r\nJohan\r\nAnna\r\nFredrik\r\nSara\r\nMarcus`,
-    namesStorageKey: 'kontorsSchackNamesV1',
-    storageKey: 'kontorsSchackChampionshipV1',
-    introSeconds: 7,          // Visning av startlistan.
-    countdownSeconds: 4,      // 3-2-1-KÖR!
-    roundBreakSeconds: 5,     // Visning av nästa runda mellan rundorna.
-    matchEndSeconds: 3.5,     // Banderoll efter ett avgjort parti.
+    defaultPlayers: `Erik\r\nAlexander\r\nKersti\r\nJohan\r\nAnna\r\nFredrik\r\nSara\r\nMarcus\r\nLisa\r\nPeter\r\nMaria\r\nLars\r\nKarin\r\nAnders\r\nEva\r\nMikael\r\nLinda\r\nThomas\r\nJohanna\r\nDaniel\r\nEmma\r\nNiklas\r\nSofia\r\nHenrik\r\nAmanda`,
+    namesStorageKey: 'kontorsSchackNamesV2',
+    storageKey: 'kontorsSchackChampionshipV2',
+    introSeconds: 9,          // Visning av gruppindelningen.
+    intermissionSeconds: 8,   // Visning mellan gruppspel/slutspel och mellan slutspelsrundor.
     resultsSeconds: 12,       // Resultat- och mästerskapsvy.
-    moveSeconds: .45,         // Grundtid per drag (varieras slumpmässigt).
-    moveSecondsCapture: .85,  // Längre paus vid slag och schack.
+    gameEndSeconds: 2.5,      // Paus på brädet efter ett avgjort parti innan nästa startar.
+    moveSeconds: .4,          // Grundtid per drag (varieras slumpmässigt).
+    moveSecondsCapture: .75,  // Längre paus vid slag och schack.
     maxAttempts: 3,           // Antal partier i en match innan seedning avgör.
-    maxPlayers: 24,
+    maxPlayers: 32,
+    groupSize: 4,             // Spelare per kvalgrupp.
+    advancePerGroup: 2,       // Antal som går vidare från varje grupp.
+    maxParallel: 4,           // Max antal partier samtidigt på skärmen (split screen).
     pointsTable: [10,6,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
   };
 
@@ -114,8 +116,7 @@
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), lerp=(a,b,t)=>a+(b-a)*t;
   const rnd=(a=1,b=0)=>b+Math.random()*(a-b);
-  const shuffled=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
-  const COLORS=['#ff4d4d','#45a8ff','#ffd43b','#68e06f','#db69ff','#ff963b','#42e5dc','#f26fab','#b6ec4a','#9c8cff'];
+  const COLORS=['#ff4d4d','#45a8ff','#ffd43b','#68e06f','#db69ff','#ff963b','#42e5dc','#f26fab','#b6ec4a','#9c8cff','#f78fb3','#7bed9f','#70a1ff','#eccc68','#ff6b81','#a4b0be','#2ed573','#1e90ff','#ffa502','#e84118','#c56cf0','#f368e0','#48dbfb','#00d2d3','#ff9ff3','#54a0ff','#5f27cd','#00d8d6','#ff9f43','#10ac84','#ee5253','#0abde3'];
 
   class AudioFX{
     constructor(){this.enabled=false;this.ctx=null}
@@ -330,7 +331,7 @@
         else if(k==='r')this.startNewEvent();
         else if(k==='m'){this.fx.toggle();this.setStatus()}
         else if(k==='n')this.openNameEditor();
-        else if(k==='s'){this.showPanels=!this.showPanels;const v=this.showPanels?'block':'none';for(const id of['#championship','#moves','#bracket'])qs(id).style.display=v}
+        else if(k==='s'){this.showPanels=!this.showPanels;const v=this.showPanels?'block':'none';for(const id of['#championship','#moves','#groupsPanel','#bracket'])qs(id).style.display=v}
         else if(k==='x'&&e.shiftKey&&e.ctrlKey)this.resetStats();
       });
       let timer;
@@ -350,99 +351,156 @@
 
     startNewEvent(){
       const names=this.getPlayerNames();
-      const players=names.map((n,i)=>({name:n,color:COLORS[i%COLORS.length],seed:0,pts:0,wins:0,played:0,mates:0,style:{rand:rnd(.8,1.9),cap:rnd(.9,1.15),agg:rnd(.7,1.5)}}));
+      const players=names.map((n,i)=>({name:n,color:COLORS[i%COLORS.length],seed:0,pts:0,wins:0,played:0,mates:0,gPts:0,gW:0,gD:0,gL:0,groupRank:0,style:{rand:rnd(.8,1.9),cap:rnd(.9,1.15),agg:rnd(.7,1.5)}}));
       for(const p of players){const d=this.champ.drivers[p.name];if(d){p.pts=d.points;p.wins=d.wins}}
       players.sort((a,b)=>(b.pts*1000+b.wins*100+Math.random())-(a.pts*1000+a.wins*100+Math.random()));
       players.forEach((p,i)=>p.seed=i+1);
-      const n=players.length,bs=Math.min(32,Math.pow(2,Math.ceil(Math.log2(Math.max(2,n)))));
-      const slots=players.concat(Array.from({length:bs-n},(_,i)=>({name:'Walkover',bye:true,color:'#5b6470',seed:n+i+1})));
-      const order=seedOrder(bs),rounds=[];
-      const r0=[];
-      for(let i=0;i<bs;i+=2)r0.push({a:slots[order[i]-1],b:slots[order[i+1]-1],winner:null,done:false,attempts:0});
-      rounds.push(r0);
-      for(let r=1;r<Math.log2(bs);r++){
-        const prev=rounds[r-1],cur=[];
-        for(let i=0;i<prev.length;i+=2)cur.push({a:null,b:null,winner:null,done:false,attempts:0,src:[prev[i],prev[i+1]]});
-        rounds.push(cur);
+      const n=players.length,gs=Math.min(CONFIG.groupSize,Math.max(2,n));
+      const numGroups=Math.max(1,Math.ceil(n/gs));
+      this.groups=Array.from({length:numGroups},(_,i)=>({idx:i,label:String.fromCharCode(65+i),players:[],matches:[]}));
+      players.forEach((p,i)=>this.groups[i%numGroups].players.push(p));
+      const groupRounds=this.groups.map(g=>{
+        const P=g.players,m=P.length,arr=P.slice(),out=[];
+        for(let r=0;r<m-1;r++){
+          const round=[];
+          for(let i=0;i<Math.floor(m/2);i++)round.push([arr[i],arr[m-1-i]]);
+          out.push(round);
+          arr.splice(1,0,arr.pop());
+        }
+        return out;
+      });
+      this.phase='groups';this.waves=[];this.waveIdx=0;this.games=[];this.gameSeq=0;
+      const maxRounds=Math.max(1,...groupRounds.map(x=>x.length));
+      for(let r=0;r<maxRounds;r++){
+        const wave=[];
+        this.groups.forEach((g,gi)=>{
+          const rr=groupRounds[gi][r];
+          if(rr)for(const [a,b] of rr){
+            const m={a,b,winner:null,done:false,attempts:0,started:false,phase:'groups',group:g};
+            g.matches.push(m);wave.push(m);
+          }
+        });
+        if(wave.length)this.waves.push(wave);
       }
-      this.players=players;this.rounds=rounds;this.bracketSize=bs;
-      this.roundIdx=0;this.matchIdx=0;this.match=null;this.game=null;this._mv=-1;
-      this.totalMatches=rounds.flat().length;
+      this.groupWaveCount=this.waves.length;
+      this.totalMatches=this.waves.flat().length;
+      this.players=players;
       this.comment.reset();
-      this.comment.say(`Turnering ${(this.champ.races||0)+1}: ${n} deltagare, seedning efter mästerskapspoäng.`,0,true);
+      this.comment.say(`Turnering ${(this.champ.races||0)+1}: ${n} deltagare i ${numGroups} grupper om ${gs}.`,0,true);
       this.state='intro';this.stateTime=0;
-      this.showIntro();this.setTag();this.renderBracket();
+      this.setTag();this.showIntro();
     }
 
     setTag(){
-      const rd=this.rounds[this.roundIdx],n=rd?rd.length:1,t=qs('#sessionTag');
-      t.textContent=roundName(n);t.className=n===1?'final':'';
+      const t=qs('#sessionTag');
+      if(this.phase==='groups'){t.textContent='GRUPPSPEL';t.className=''}
+      else{const w=this.waves[this.waveIdx],n=w?w.length:1;t.textContent=roundName(n);t.className=n===1?'final':''}
     }
 
     showIntro(){
-      const r0=this.rounds[0];
-      qs('#overlayTitle').textContent=`Tävling ${(this.champ.races||0)+1} · Startlista`;
-      qs('#overlayContent').innerHTML=`<div class="grid">${r0.map(m=>`<div class="driver"><strong style="color:${m.a.color}">● ${esc(m.a.name)}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${m.b.color}">● ${esc(m.b.name)}</strong></div>`).join('')}</div><p>${this.players.length} deltagare · seed 1 möter seed ${this.bracketSize} · vinnaren får ${CONFIG.pointsTable[0]} mästerskapspoäng · oavgjorda matcher spelas om (max ${CONFIG.maxAttempts} partier)</p>`;
+      qs('#overlayTitle').textContent=`Tävling ${(this.champ.races||0)+1} · Gruppspel`;
+      qs('#overlayContent').innerHTML=`<div class="grid">${this.groups.map(g=>`<div class="driver"><strong>Grupp ${g.label}</strong><br>${g.players.map(p=>`<span style="color:${p.color}">●</span> ${esc(p.name)}`).join('<br>')}</div>`).join('')}</div><p>${this.players.length} deltagare i ${this.groups.length} grupper · alla möter alla i gruppen · topp ${CONFIG.advancePerGroup} per grupp går till slutspelet · upp till ${CONFIG.maxParallel} partier samtidigt på skärmen</p>`;
       qs('#centerOverlay').classList.add('show');
     }
 
-    showRoundBreak(){
-      const rd=this.rounds[this.roundIdx];
-      qs('#overlayTitle').textContent=roundName(rd.length)+' börjar';
-      qs('#overlayContent').innerHTML=`<div class="grid">${rd.map(m=>{const a=m.src?m.src[0].winner:null,b=m.src?m.src[1].winner:null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('')}</div><p>Partierna spelas ett i taget på skärmen...</p>`;
+    showIntermission(title,html){
+      qs('#overlayTitle').textContent=title;
+      qs('#overlayContent').innerHTML=html;
       qs('#centerOverlay').classList.add('show');
     }
 
-    showResults(winner,rows){
-      qs('#overlayTitle').textContent=`🏆 ${esc(winner.name)} är kontorsmästare!`;
-      const champ=Object.entries(this.champ.drivers).sort((a,b)=>b[1].points-a[1].points||b[1].wins-a[1].wins);
-      const maxRows=Math.max(8,Math.min(16,Math.floor((innerHeight-260)/25)));
-      qs('#overlayContent').innerHTML=`<div class="resultsGrid"><section class="resultsSection"><h3>Placeringar · Tävling ${this.champ.races}</h3><table class="resultsTable"><thead><tr><th>#</th><th>Spelare</th><th>Poäng</th></tr></thead><tbody>${rows.slice(0,maxRows).map(r=>`<tr><td class="gold">${r.pl}</td><td style="color:${r.p.color};font-weight:800">${esc(r.p.name)}</td><td>+${r.pts}</td></tr>`).join('')}</tbody></table></section><section class="resultsSection"><h3>Mästerskapsställning</h3><table class="champTable"><thead><tr><th>#</th><th>Spelare</th><th>Poäng</th><th>Titlar</th></tr></thead><tbody>${champ.slice(0,maxRows).map(([n,d],i)=>`<tr><td>${i+1}</td><td>${esc(n)}</td><td class="gold">${d.points}</td><td>${d.wins||0}</td></tr>`).join('')}</tbody></table></section></div><p>Nästa turnering startar automatiskt om ${CONFIG.resultsSeconds} sekunder...</p>`;
+    showQualified(adv,firstWave){
+      const cards=this.groupResults.map(r=>`<div class="driver"><strong>Grupp ${r.group.label}</strong><br>${r.standings.map((p,i)=>`<div style="display:flex;gap:6px;justify-content:center;align-items:center;padding:1px 0" class="${i<CONFIG.advancePerGroup?'gold':''}"><i style="width:8px;height:8px;border-radius:50%;background:${p.color};display:inline-block"></i> ${esc(p.name)} <b>${p.gPts}p</b>${i<CONFIG.advancePerGroup?' ✔':''}</div>`).join('')}</div>`).join('');
+      const pairs=firstWave.map(m=>{const a=m.src?m.src[0].winner:null,b=m.src?m.src[1].winner:null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('');
+      this.showIntermission('Kvalificerade till slutspelet!',`<div class="grid">${cards}</div><h3 style="color:#ffe168;margin:14px 0 6px">Första slutspelsrundan</h3><div class="grid">${pairs}</div><p>Slutspelet spelas på ett stort bräde, ett parti i taget...</p>`);
+    }
+
+    showRoundBreak(wave){
+      qs('#overlayTitle').textContent=roundName(wave.length)+' börjar';
+      qs('#overlayContent').innerHTML=`<div class="grid">${wave.map(m=>{const a=m.src?m.src[0].winner:null,b=m.src?m.src[1].winner:null;return `<div class="driver"><strong style="color:${a?a.color:'#888'}">● ${a?esc(a.name):'…'}</strong><div style="opacity:.6;font-size:12px;margin:4px 0">mot</div><strong style="color:${b?b.color:'#888'}">● ${b?esc(b.name):'…'}</strong></div>`}).join('')}</div><p>Partiet spelas på stort bräde...</p>`;
       qs('#centerOverlay').classList.add('show');
     }
 
-    playNextMatch(){
-      qs('#centerOverlay').classList.remove('show');
-      let rd=this.rounds[this.roundIdx];
-      while(rd&&this.matchIdx<rd.length&&rd[this.matchIdx].done)this.matchIdx++;
-      if(!rd||this.matchIdx>=rd.length){
-        this.roundIdx++;this.matchIdx=0;
-        if(this.roundIdx>=this.rounds.length){this.endEvent();return}
-        rd=this.rounds[this.roundIdx];
-        this.state='roundBreak';this.stateTime=0;
-        this.comment.say(`${roundName(rd.length)} börjar!`,this.clock,true);
-        this.showRoundBreak();this.setTag();this.renderBracket();return;
+    buildPlayoff(advancers){
+      advancers.sort((a,b)=>(a.rank-b.rank)||(b.player.gPts-a.player.gPts)||(b.player.gW-a.player.gW)||(Math.random()-.5));
+      const list=advancers.map(a=>a.player);
+      const bs=Math.min(32,Math.pow(2,Math.ceil(Math.log2(Math.max(2,list.length)))));
+      const slots=list.concat(Array.from({length:bs-list.length},(_,i)=>({name:'Walkover',bye:true,color:'#5b6470',seed:list.length+i+1})));
+      const order=seedOrder(bs),rounds=[];
+      const r0=[];
+      for(let i=0;i<bs;i+=2)r0.push({a:slots[order[i]-1],b:slots[order[i+1]-1],winner:null,done:false,attempts:0,started:false,phase:'playoff'});
+      rounds.push(r0);
+      for(let r=1;r<Math.log2(bs);r++){
+        const prev=rounds[r-1],cur=[];
+        for(let i=0;i<prev.length;i+=2)cur.push({a:null,b:null,winner:null,done:false,attempts:0,started:false,phase:'playoff',src:[prev[i],prev[i+1]]});
+        rounds.push(cur);
       }
-      const m=rd[this.matchIdx];this.match=m;
-      if(m.src){m.a=m.src[0].winner;m.b=m.src[1].winner}
-      this.setTag();this.renderBracket();
-      if(!m.a||!m.b){m.winner=m.a||m.b;m.done=true;this.resolveMatch(m,m.winner,'walkover');return}
-      if(m.a.bye&&!m.b.bye){m.winner=m.b;m.done=true;this.resolveMatch(m,m.b,'walkover');return}
-      if(m.b.bye&&!m.a.bye){m.winner=m.a;m.done=true;this.resolveMatch(m,m.a,'walkover');return}
-      this.startMatch(m);
+      return rounds;
+    }
+
+    endGroupStage(){
+      this.groupResults=[];
+      for(const g of this.groups){
+        const st=[...g.players].sort((a,b)=>(b.gPts-a.gPts)||(b.gW-a.gW)||(b.gD-a.gD)||(a.seed-b.seed));
+        st.forEach((p,i)=>p.groupRank=i+1);
+        this.groupResults.push({group:g,standings:st});
+        this.comment.say(`Grupp ${g.label} är klar – ${st.slice(0,Math.min(CONFIG.advancePerGroup,st.length)).map(p=>p.name).join(' och ')} går vidare!`,this.clock,true);
+      }
+      const adv=this.groupResults.flatMap(r=>r.standings.slice(0,Math.min(CONFIG.advancePerGroup,r.standings.length)).map(p=>({player:p,group:r.group,rank:p.groupRank})));
+      const playoff=this.buildPlayoff(adv);
+      this.waves=this.waves.concat(playoff);
+      this.totalMatches=this.waves.flat().length;
+      this.phase='playoff';
+      this.waveIdx=this.groupWaveCount;
+      this.state='intermission';this.stateTime=0;
+      this.setTag();
+      this.showQualified(adv,playoff[0]);
+    }
+
+    ensureGames(){
+      const maxP=this.phase==='groups'?CONFIG.maxParallel:1;
+      const wave=this.waves[this.waveIdx];
+      if(wave){
+        while(this.games.length<maxP){
+          const m=wave.find(x=>!x.started&&!x.done);
+          if(!m)break;
+          m.started=true;
+          if(m.src){m.a=m.src[0].winner;m.b=m.src[1].winner}
+          if(!m.a||!m.b){m.winner=m.a||m.b;m.done=true;continue}
+          if(m.a.bye&&!m.b.bye){m.winner=m.b;m.done=true;continue}
+          if(m.b.bye&&!m.a.bye){m.winner=m.a;m.done=true;continue}
+          if(m.a.bye&&m.b.bye){m.winner=m.a;m.done=true;continue}
+          this.startMatch(m);
+        }
+      }
+      if(wave&&wave.every(m=>m.done)&&this.games.length===0){
+        if(this.phase==='groups'){this.endGroupStage();return}
+        this.waveIdx++;
+        this.setTag();
+        if(this.waveIdx<this.waves.length){this.state='intermission';this.stateTime=0;this.showRoundBreak(this.waves[this.waveIdx]);return}
+        this.endEvent();
+      }
     }
 
     startMatch(m){
       const white=m.attempts%2===0?m.a:m.b,black=white===m.a?m.b:m.a;
       m.a.played++;m.b.played++;
       const st=initialState();
-      this.game={st,white,black,sans:[],rep:new Map([[repKey(st),1]]),plies:0,moveTimer:0,delay:CONFIG.moveSeconds*rnd(.7,1.2),anim:null,lastFrom:null,lastTo:null,capturedW:[],capturedB:[],over:null};
-      this._mv=-1;
-      this.state='countdown';this.stateTime=0;
-      qs('#centerOverlay').classList.remove('show');
-      this.comment.say(`${m.attempts>0?`Skiljeparti ${m.attempts}: `:''}${white.name} (vit) mot ${black.name} (svart)!`,this.clock,true);
+      const g={id:++this.gameSeq,st,white,black,sans:[],rep:new Map([[repKey(st),1]]),plies:0,moveTimer:0,delay:CONFIG.moveSeconds*rnd(.7,1.2),anim:null,lastFrom:null,lastTo:null,capturedW:[],capturedB:[],over:null,overT:0,match:m,lastMoveAt:0};
+      this.games.push(g);
+      this.comment.say(`${m.attempts>0?`Skiljeparti ${m.attempts}: `:''}${white.name} (vit) mot ${black.name} (svart)${m.phase==='groups'?` – grupp ${m.group.label}`:''}!`,this.clock,true);
     }
 
-    doMove(){
-      const g=this.game,st=g.st;
-      if(!g||g.over)return;
+    doMove(g){
+      const st=g.st;
+      if(g.over)return;
       const mover=st.turn==='w'?g.white:g.black,opp=st.turn==='w'?g.black:g.white;
       const moves=legalMoves(st);
       const m=chooseMove(st,mover.style,moves);
-      if(!m){this.finishGame({over:true,result:'draw',reason:'femtio'});return}
+      if(!m){this.finishGame(g,{over:true,result:'draw',reason:'femtio'});return}
       const s=san(st,m,moves);
       const ns=makeMove(st,m);
-      g.st=ns;g.sans.push(s);g.plies++;g.lastFrom=m.from;g.lastTo=m.to;
+      g.st=ns;g.sans.push(s);g.plies++;g.lastFrom=m.from;g.lastTo=m.to;g.lastMoveAt=this.clock;
       const rk=repKey(ns);g.rep.set(rk,(g.rep.get(rk)||0)+1);
       g.anim={from:m.from,to:m.to,piece:m.promo||m.piece,t:0};
       if(m.captured){(st.turn==='w'?g.capturedW:g.capturedB).push(m.captured)}
@@ -455,12 +513,12 @@
       g.delay=(m.captured||chk)?CONFIG.moveSecondsCapture*rnd(.8,1.25):CONFIG.moveSeconds*rnd(.55,1.3);
       g.moveTimer=0;
       const res=g.plies>=500?{over:true,result:'draw',reason:'femtio'}:statusOf(ns,g.rep.get(rk)||1);
-      if(res.over)this.finishGame(res);
+      if(res.over)this.finishGame(g,res);
     }
 
-    finishGame(res){
-      const g=this.game,m=this.match;
+    finishGame(g,res){
       g.over=res;
+      const m=g.match;
       const whiteWon=res.result==='1-0',blackWon=res.result==='0-1';
       let winner=whiteWon?g.white:blackWon?g.black:null;
       if(res.reason==='matt'){
@@ -471,43 +529,53 @@
       else if(res.reason==='femtio')this.comment.say('Femtiodragsregeln – oavgjort!',this.clock,true);
       else if(res.reason==='tredubbel')this.comment.say('Samma ställning för tredje gången – oavgjort!',this.clock,true);
       else if(res.reason==='material')this.comment.say('För lite material kvar – oavgjort!',this.clock,true);
+      if(m.phase==='groups'){
+        if(res.result==='draw'){m.a.gPts+=1;m.b.gPts+=1;m.a.gD++;m.b.gD++}
+        else{winner.gPts+=3;winner.gW++;(winner===m.a?m.b:m.a).gL++}
+      }
+    }
+
+    resolveGame(g){
+      this.games=this.games.filter(x=>x!==g);
+      const m=g.match,res=g.over;
+      const whiteWon=res.result==='1-0',blackWon=res.result==='0-1';
+      let winner=whiteWon?g.white:blackWon?g.black:null;
       m.attempts++;
       if(!winner&&m.attempts<CONFIG.maxAttempts){
         this.showBanner('Oavgjort – skiljeparti spelas!');
-        this.state='matchEnd';this.stateTime=0;return;
+        m.started=false;
+        return;
       }
       if(!winner){
         winner=m.a.seed<m.b.seed?m.a:m.b;
         this.comment.say(`Efter ${m.attempts} oavgjorda partier går ${winner.name} vidare på bättre seedning!`,this.clock,true);
       }
-      this.resolveMatch(m,winner,res);
+      this.resolveMatch(m,winner,res,g.plies);
     }
 
-    resolveMatch(m,winner,res){
+    resolveMatch(m,winner,res,plies){
       m.winner=winner;m.done=true;
       const loser=winner===m.a?m.b:m.a;
-      const detail=res.reason==='matt'?`Matt i ${this.game?this.game.plies:0} drag`:res.reason==='patt'?'patt':res.reason==='femtio'?'50-drag':res.reason==='tredubbel'?'3× upprepning':res.reason==='material'?'material':'efter seedning';
+      const detail=res.reason==='matt'?`Matt i ${plies||'?'} drag`:res.reason==='patt'?'patt':res.reason==='femtio'?'50-drag':res.reason==='tredubbel'?'3× upprepning':res.reason==='material'?'material':'efter seedning';
       this.showBanner(`🏆 ${winner.name} besegrar ${loser.name} – ${detail}`);
       this.comment.say(`${winner.name} går vidare mot ${loser.name}!`,this.clock,true);
-      this.state='matchEnd';this.stateTime=0;
-      this.renderBracket();
     }
 
-    showBanner(text){const b=qs('#banner');b.textContent=text;b.style.display='block'}
-    hideBanner(){qs('#banner').style.display='none'}
+    showBanner(text){const b=qs('#banner');b.textContent=text;b.style.display='block';clearTimeout(this._bt);this._bt=setTimeout(()=>{b.style.display='none'},2600)}
 
     endEvent(){
-      const fm=this.rounds[this.rounds.length-1][0];
+      const fm=this.waves[this.waves.length-1][0];
       const winner=fm.winner;
       const places=new Map();places.set(winner,1);
       const fl=fm.winner===fm.a?fm.b:fm.a;
       if(fl&&!fl.bye)places.set(fl,2);
       let place=3;
-      for(let r=this.rounds.length-2;r>=0;r--)for(const m of this.rounds[r]){
+      for(let w=this.waves.length-2;w>=this.groupWaveCount;w--)for(const m of this.waves[w]){
         const loser=m.winner?(m.winner===m.a?m.b:m.a):null;
         if(loser&&!loser.bye&&!places.has(loser))places.set(loser,place++);
       }
-      for(const p of this.players)if(!places.has(p))places.set(p,place++);
+      const groupLosers=this.players.filter(p=>!places.has(p)).sort((a,b)=>(b.gPts-a.gPts)||(b.gW-a.gW)||(a.seed-b.seed));
+      for(const p of groupLosers)places.set(p,place++);
       this.champ.races=(this.champ.races||0)+1;
       const rows=[];
       for(const p of this.players){
@@ -519,27 +587,33 @@
       }
       rows.sort((a,b)=>a.pl-b.pl);
       this.save();
-      this.hideBanner();
       this.state='results';this.stateTime=0;
       this.comment.say(`${winner.name} vinner hela turneringen! 🏆`,this.clock,true);
       this.fx.tone(523,.18,'triangle',.06);this.fx.tone(659,.18,'triangle',.06,0,.16);this.fx.tone(784,.18,'triangle',.06,0,.32);this.fx.tone(1047,.5,'triangle',.07,0,.48);
-      this.showResults(winner,rows);this.setTag();this.renderBracket();this.renderChampionship();
+      this.showResults(winner,rows);this.setTag();this.renderChampionship();
+    }
+
+    showResults(winner,rows){
+      qs('#overlayTitle').textContent=`🏆 ${esc(winner.name)} är kontorsmästare!`;
+      const champ=Object.entries(this.champ.drivers).sort((a,b)=>b[1].points-a[1].points||b[1].wins-a[1].wins);
+      const maxRows=Math.max(8,Math.min(16,Math.floor((innerHeight-260)/25)));
+      qs('#overlayContent').innerHTML=`<div class="resultsGrid"><section class="resultsSection"><h3>Slutplaceringar · Tävling ${this.champ.races}</h3><table class="resultsTable"><thead><tr><th>#</th><th>Spelare</th><th>Poäng</th></tr></thead><tbody>${rows.slice(0,maxRows).map(r=>`<tr><td class="gold">${r.pl}</td><td style="color:${r.p.color};font-weight:800">${esc(r.p.name)}</td><td>+${r.pts}</td></tr>`).join('')}</tbody></table></section><section class="resultsSection"><h3>Mästerskapsställning</h3><table class="champTable"><thead><tr><th>#</th><th>Spelare</th><th>Poäng</th><th>Titlar</th></tr></thead><tbody>${champ.slice(0,maxRows).map(([n,d],i)=>`<tr><td>${i+1}</td><td>${esc(n)}</td><td class="gold">${d.points}</td><td>${d.wins||0}</td></tr>`).join('')}</tbody></table></section></div><p>Nästa turnering startar automatiskt om ${CONFIG.resultsSeconds} sekunder...</p>`;
+      qs('#centerOverlay').classList.add('show');
     }
 
     update(dt){
       if(this.paused)return;
       this.clock+=dt;this.stateTime+=dt;
-      if(this.game&&this.game.anim){this.game.anim.t+=dt/.16;if(this.game.anim.t>=1)this.game.anim=null}
-      if(this.state==='intro'&&this.stateTime>=CONFIG.introSeconds)this.playNextMatch();
-      else if(this.state==='countdown'){
-        const el=this.stateTime,cd=qs('#countdown'),n=Math.ceil(3-el);
-        if(el<3){const t=String(Math.max(1,n));if(cd.textContent!==t){cd.textContent=t;cd.className='show';this.fx.tone(380,.09)}}
-        else if(el<CONFIG.countdownSeconds){if(cd.textContent!=='KÖR!'){cd.textContent='KÖR!';this.fx.tone(620,.35,'square',.05,400)}cd.className='show'}
-        else{cd.className='';this.state='playing';this.stateTime=0}
+      if(this.state==='intro'&&this.stateTime>=CONFIG.introSeconds){qs('#centerOverlay').classList.remove('show');this.state='playing';this.stateTime=0;this.ensureGames()}
+      else if(this.state==='intermission'&&this.stateTime>=CONFIG.intermissionSeconds){qs('#centerOverlay').classList.remove('show');this.state='playing';this.stateTime=0;this.ensureGames()}
+      else if(this.state==='playing'){
+        for(const g of [...this.games]){
+          if(g.anim){g.anim.t+=dt/.16;if(g.anim.t>=1)g.anim=null}
+          if(!g.over){g.moveTimer+=dt;if(g.moveTimer>=g.delay)this.doMove(g)}
+          else{g.overT+=dt;if(g.overT>=CONFIG.gameEndSeconds)this.resolveGame(g)}
+        }
+        this.ensureGames();
       }
-      else if(this.state==='playing'){const g=this.game;if(g&&!g.over){g.moveTimer+=dt;if(g.moveTimer>=g.delay)this.doMove()}}
-      else if(this.state==='matchEnd'&&this.stateTime>=CONFIG.matchEndSeconds){this.hideBanner();this.playNextMatch()}
-      else if(this.state==='roundBreak'&&this.stateTime>=CONFIG.roundBreakSeconds)this.playNextMatch();
       else if(this.state==='results'&&this.stateTime>=CONFIG.resultsSeconds){qs('#centerOverlay').classList.remove('show');this.startNewEvent()}
     }
 
@@ -550,17 +624,17 @@
       else{c.lineWidth=Math.max(1,s*.05);c.strokeStyle='#cfd6dd';c.fillStyle='#16181d';c.strokeText(GLYPH[p],x,y);c.fillText(GLYPH[p],x,y)}
     }
 
-    drawBoard(c){
-      const S=Math.min(this.h*.9,this.w*.6),x0=(this.w-S)/2,y0=(this.h-S)/2,s=S/8;
-      c.save();c.shadowColor='#000';c.shadowBlur=30;c.fillStyle='#241d14';c.beginPath();c.roundRect(x0-12,y0-12,S+24,S+24,12);c.fill();c.restore();
-      const board=this.game?this.game.st:initialState();
+    drawGameBoard(c,g,x0,y0,S){
+      const labelH=Math.max(18,S*.09);
+      c.save();c.shadowColor='#000';c.shadowBlur=Math.max(8,S*.08);c.fillStyle='#241d14';c.beginPath();c.roundRect(x0-8,y0-8,S+16,S+16,8);c.fill();c.restore();
+      const board=g?g.st:initialState();
+      const s=S/8;
       for(let r=0;r<8;r++)for(let f=0;f<8;f++){
         c.fillStyle=(r+f)%2?'#739552':'#ebecd0';
         c.fillRect(x0+f*s,y0+r*s,s,s);
         if(f===0){c.fillStyle=r%2?'#ebecd0':'#739552';c.font=`${s*.22}px system-ui`;c.textAlign='left';c.textBaseline='top';c.fillText(String(8-r),x0+3,y0+r*s+3)}
         if(r===7){c.fillStyle=f%2?'#739552':'#ebecd0';c.font=`${s*.22}px system-ui`;c.textAlign='right';c.textBaseline='bottom';c.fillText(FILES[f],x0+f*s+s-3,y0+8*s-3)}
       }
-      const g=this.game;
       if(g&&g.lastFrom!==null){
         c.fillStyle='rgba(255,213,74,.4)';
         c.fillRect(x0+(g.lastFrom%8)*s,y0+Math.floor(g.lastFrom/8)*s,s,s);
@@ -584,21 +658,32 @@
         this.drawPiece(c,anim.piece,lerp(x0+(anim.from%8)*s+s/2,x0+(anim.to%8)*s+s/2,t),lerp(y0+Math.floor(anim.from/8)*s+s/2,y0+Math.floor(anim.to/8)*s+s/2,t),s);
       }
       if(g){
-        c.font=`900 ${clamp(S*.042,13,22)}px system-ui`;
-        c.textAlign='center';c.textBaseline='alphabetic';
-        c.fillStyle=g.black.color;c.beginPath();c.arc(x0+14,y0-20,6,0,Math.PI*2);c.fill();
-        c.fillStyle='#fff';c.textAlign='left';c.fillText(`${g.black.name} ⚫`,x0+26,y0-13);
-        c.textAlign='right';c.fillStyle=g.white.color;c.beginPath();c.arc(x0+S-14,y0+S+26,6,0,Math.PI*2);c.fill();
-        c.fillStyle='#fff';c.fillText(`⚪ ${g.white.name}`,x0+S-26,y0+S+33);
+        const fs=clamp(S*.055,11,18);
+        c.font=`900 ${fs}px system-ui`;c.textBaseline='alphabetic';
+        c.textAlign='left';c.fillStyle=g.black.color;c.beginPath();c.arc(x0+8,y0-labelH/2+4,Math.max(4,fs*.4),0,Math.PI*2);c.fill();
+        c.fillStyle='#fff';c.fillText(`${g.black.name} ⚫`,x0+8+fs*.9,y0-labelH/2+fs*.35);
+        c.textAlign='right';c.fillStyle=g.white.color;c.beginPath();c.arc(x0+S-8,y0+S+labelH/2,Math.max(4,fs*.4),0,Math.PI*2);c.fill();
+        c.fillStyle='#fff';c.fillText(`⚪ ${g.white.name}`,x0+S-8-fs*.9,y0+S+labelH/2+fs*.35);
+        c.textAlign='center';c.fillStyle='rgba(255,255,255,.55)';c.font=`700 ${clamp(S*.04,9,13)}px ui-monospace,monospace`;
+        c.fillText(`drag ${g.plies}`,x0+S/2,y0+S+labelH/2+fs*.35);
       }
+    }
+
+    renderGroups(){
+      const el=qs('#groupsPanel');
+      el.innerHTML=`<h3>Grupper · topp ${CONFIG.advancePerGroup} går vidare</h3>`+this.groups.map(g=>{
+        const st=[...g.players].sort((a,b)=>(b.gPts-a.gPts)||(b.gW-a.gW)||(b.gD-a.gD)||(a.seed-b.seed));
+        return `<div class="groupCard"><div class="groupTitle">Grupp ${g.label}</div>`+st.map((p,i)=>`<div class="mrow ${i<CONFIG.advancePerGroup?'win':''}"><i class="dot" style="background:${p.color}"></i><span>${esc(p.name)}</span><span>${p.gPts}p${i<CONFIG.advancePerGroup?' ✔':''}</span></div>`).join('')+`</div>`;
+      }).join('');
     }
 
     renderBracket(){
       const el=qs('#bracket');
-      if(!this.rounds){el.innerHTML='';return}
-      el.innerHTML=`<h3>Turneringsträd · parti ${this.rounds.flat().filter(m=>m.done).length}/${this.totalMatches}</h3><div class="rounds">`+this.rounds.map((rd,ri)=>{
+      const waves=this.waves.slice(this.groupWaveCount);
+      if(!waves.length){el.innerHTML='';return}
+      el.innerHTML=`<h3>Slutspel · parti ${this.waves.flat().filter(m=>m.done).length}/${this.totalMatches}</h3><div class="rounds">`+waves.map((rd,ri)=>{
         return `<div class="roundCol"><div class="roundTitle">${roundName(rd.length)}</div>`+rd.map(m=>{
-          const live=m===this.match&&['playing','countdown','matchEnd'].includes(this.state);
+          const live=this.phase==='playoff'&&this.waveIdx-this.groupWaveCount===ri&&this.games.some(g=>g.match===m);
           const cell=p=>{
             if(!p)return`<div class="mrow"><i class="dot" style="background:#444"></i><span>…</span><span></span></div>`;
             const win=m.done&&m.winner===p,out=m.done&&!win;
@@ -616,26 +701,29 @@
       el.innerHTML=`<h3>Mästerskapet · ${this.champ.races} turn.</h3>${champ.slice(0,visible).map(([n,d],i)=>`<div class="champRow"><span>${i+1}</span><span>${esc(n)}</span><b>${d.points} p${d.wins?` · ${d.wins}🏆`:''}</b></div>`).join('')}${champ.length>visible?`<div class="moreDrivers">+${champ.length-visible} fler</div>`:''}`;
     }
 
-    renderMoves(){
-      const el=qs('#moves'),g=this.game;
-      if(!g||g.sans.length===this._mv)return;
-      this._mv=g.sans.length;
-      let h='<h3>Dragen</h3>';
-      for(let i=0;i<g.sans.length;i+=2)h+=`${i/2+1}. ${esc(g.sans[i])} ${g.sans[i+1]||''}<br>`;
+    renderMoves(focus){
+      const el=qs('#moves');
+      if(!focus||focus.sans.length===this._mv)return;
+      this._mv=focus.sans.length;
+      let h=`<h3>Dragen · ${esc(focus.white.name)}–${esc(focus.black.name)}</h3>`;
+      for(let i=0;i<focus.sans.length;i+=2)h+=`${i/2+1}. ${esc(focus.sans[i])} ${focus.sans[i+1]||''}<br>`;
       el.innerHTML=h;el.scrollTop=el.scrollHeight;
     }
 
     drawUI(){
-      this.renderChampionship();this.renderMoves();
-      const g=this.game,m=this.match;
-      if(g&&m){
-        const diff=materialDiff(g.st.b);
-        const done=this.rounds.flat().filter(x=>x.done).length;
-        qs('#matchInfo').innerHTML=`<b>${esc(g.white.name)} ⚪ – ⚫ ${esc(g.black.name)}</b><br>Drag ${g.plies} · Parti ${Math.min(done+1,this.totalMatches)}/${this.totalMatches}<br>Material: ${diff===0?'jämnt':diff>0?`${esc(g.white.name)} +${diff}`:`${esc(g.black.name)} ${diff}`}<br><span style="font-size:14px">⚪ tar: ${g.capturedW.map(p=>GLYPH[p]).join('')||'–'} &nbsp; ⚫ tar: ${g.capturedB.map(p=>GLYPH[p]).join('')||'–'}</span>`;
+      this.renderChampionship();
+      const focus=[...this.games].sort((a,b)=>b.lastMoveAt-a.lastMoveAt)[0]||null;
+      this.renderMoves(focus);
+      const done=this.waves.flat().filter(m=>m.done).length;
+      if(this.phase==='groups'){
+        qs('#matchInfo').innerHTML=`<b>GRUPPSPEL</b><br>Omgång ${Math.min(this.waveIdx+1,this.groupWaveCount)}/${this.groupWaveCount} · ${this.games.length} partier igång<br>Parti ${done}/${this.totalMatches}`;
       }else{
-        qs('#matchInfo').innerHTML=`<b>Turnering</b><br>${this.players?this.players.length+' deltagare · '+this.bracketSize+' platser':''}`;
+        const w=this.waves[this.waveIdx],rn=w?roundName(w.length):'SLUTSPEL';
+        qs('#matchInfo').innerHTML=`<b>${rn}</b><br>${this.games.length?`${esc(this.games[0].white.name)} ⚪ – ⚫ ${esc(this.games[0].black.name)}<br>`:''}Parti ${done}/${this.totalMatches}`;
       }
-      this.renderBracket();
+      qs('#groupsPanel').style.display=this.showPanels&&this.phase==='groups'?'block':'none';
+      qs('#bracket').style.display=this.showPanels&&this.phase==='playoff'?'block':'none';
+      if(this.phase==='groups')this.renderGroups();else this.renderBracket();
     }
 
     draw(){
@@ -643,7 +731,23 @@
       c.clearRect(0,0,this.w,this.h);
       const bg=c.createLinearGradient(0,0,0,this.h);bg.addColorStop(0,'#111c2c');bg.addColorStop(1,'#0a111c');
       c.fillStyle=bg;c.fillRect(0,0,this.w,this.h);
-      this.drawBoard(c);
+      const k=this.games.length;
+      if(k===0){
+        const S=Math.min(this.h*.86,this.w*.58);
+        this.drawGameBoard(c,null,(this.w-S)/2,(this.h-S)/2,S);
+      }else{
+        const cols=k===1?1:2,rows=Math.ceil(k/cols);
+        const availW=this.w>1050?this.w-640:this.w-30,availH=this.h-70;
+        const gap=12,labelH=Math.max(20,Math.min(this.h*.86,this.w*.58)*.09);
+        let S=Math.min(availW/cols-gap,(availH-(rows-1)*gap)/rows-labelH);
+        S=Math.max(S,170);
+        const gw=S*cols+(cols-1)*gap,gh=(S+labelH)*rows+(rows-1)*gap;
+        const x0=(this.w-gw)/2,y0=(this.h-gh)/2;
+        this.games.forEach((g,i)=>{
+          const col=i%cols,row=Math.floor(i/cols);
+          this.drawGameBoard(c,g,x0+col*(S+gap),y0+row*(S+labelH+gap),S);
+        });
+      }
       this.drawUI();
     }
 
